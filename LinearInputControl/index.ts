@@ -70,12 +70,30 @@ export class LinearInputControl
     container.appendChild(this._container);
   }
 
+  public refreshData(evt: Event): void {
+    this._value = this.inputElement.value as any as number;
+    this.labelElement.innerHTML = this.inputElement.value;
+    this._notifyOutputChanged();
+  }
+
   /**
    * Called when any value in the property bag has changed. This includes field values, data-sets, global values such as container height and width, offline status, control metadata values such as label, visible, etc.
    * @param context The entire property bag available to control via Context Object; It contains values as set up by the customizer mapped to names defined in the manifest, as well as utility functions
    */
   public updateView(context: ComponentFramework.Context<IInputs>): void {
     // Add code to update control view
+    // storing the latest context from the control.
+    this._value = context.parameters.controlValue.raw!;
+    this._context = context;
+    this.inputElement.setAttribute(
+      "value",
+      context.parameters.controlValue.formatted
+        ? context.parameters.controlValue.formatted
+        : ""
+    );
+    this.labelElement.innerHTML = context.parameters.controlValue.formatted
+      ? context.parameters.controlValue.formatted
+      : "";
   }
 
   /**
@@ -83,7 +101,9 @@ export class LinearInputControl
    * @returns an object based on nomenclature defined in manifest, expecting object[s] for property marked as “bound” or “output”
    */
   public getOutputs(): IOutputs {
-    return {};
+    return {
+      controlValue: this._value,
+    };
   }
 
   /**
@@ -92,5 +112,6 @@ export class LinearInputControl
    */
   public destroy(): void {
     // Add code to cleanup control if necessary
+    this.inputElement.removeEventListener("input", this._refreshData);
   }
 }
